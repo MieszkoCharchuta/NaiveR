@@ -1,15 +1,16 @@
 Package: phylotyper
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Implementation of Tools for Classifying DNA Sequences
 Version: 0.1.0
 Authors@R: 
     person("Mikołaj", "Charchuta", , "mmcharchuta@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1403-4020"))
 Description:
-    Package for classification based analysis of DNA sequences.
-    Primarily implements the naïve bayesian classifier.
+    Package for classification based analysis of DNA sequences.Primarily 
+    implements the naïve bayesian classifier from the Ribosomal Database Project
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/MieszkoCharchuta/phylotyper
 BugReports: https://github.com/MieszkoCharchuta/phylotyper/issues
+RoxygenNote: 7.3.1
