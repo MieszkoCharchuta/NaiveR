@@ -7,10 +7,15 @@ Authors@R:
            comment = c(ORCID = "0000-0002-1403-4020"))
 Description:
     Package for classification based analysis of DNA sequences.Primarily 
-    implements the naïve bayesian classifier from the Ribosomal Database Project
+    implements the naïve bayesian classifier from the Ribosomal Database 
+    Project. We will likely include  other methods of classifcation and possibly
+    some methods of visualizing the data.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/MieszkoCharchuta/phylotyper
 BugReports: https://github.com/MieszkoCharchuta/phylotyper/issues
 RoxygenNote: 7.3.1
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
