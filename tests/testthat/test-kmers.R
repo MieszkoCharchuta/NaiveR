@@ -43,8 +43,155 @@ test_that("Can extract specific kmer from a starting position and size", {
   expect_equal(kmer, "GCTAGTAG")
 
 
+})
 
+
+test_that("Conversion works between DNA sequence and quarteranry", {
+
+  x <-      "ATGCGCTAGTAGCATGC"
+  actual <- "03212130230210321"
+
+  base4_seq <- seq_to_base4(x)
+  expect_equal(base4_seq, actual)
+
+  x <-      "ATGCGCTRGTAGCATGC"
+  actual <- "0321213N230210321"
+
+  base4_seq <- seq_to_base4(x)
+  expect_equal(base4_seq, actual)
+
+  x <-      tolower("ATGCGCTRGTAGCATGC")
+  actual <- "0321213N230210321"
+
+  base4_seq <- seq_to_base4(x)
+  expect_equal(base4_seq, actual)
+
+})
+
+test_that("Generate base 10 values from kmers in base4", {
+
+  x <- "0000"
+  expected <- 1
+  actual <- base4_to_index(x)
+  expect_equal(expected, actual)
+
+  x <- "1000"
+  expected <- 65
+  actual <- base4_to_index(x)
+  expect_equal(expected, actual)
+
+  x <- "0123"
+  expected <- 28
+  actual <- base4_to_index(x)
+  expect_equal(expected, actual)
+
+  x <- c("0123", "1000", "0000")
+  expected <- c(28, 65, 1)
+  actual <- base4_to_index(x)
+  expect_equal(actual, expected)
+
+  x <- c("0123", "1000", "0000", "000N")
+  expected <- c(28, 65, 1)
+  actual <- base4_to_index(x)
+  expect_equal(expected, actual)
+
+})
+
+test_that("Accurately detect kmers from a sequence", {
+
+  sequence <- "0321213N230210321"
+  kmers <- get_all_kmers(sequence)
+  indices <- base4_to_index(kmers)
+
+  detected <- detect_kmers(sequence)
+
+  expect_equal(length(detected[indices]), length(indices))
+  expect_equal(length(detected[-indices]), 4^8 - length(indices))
+  expect_equal(sum(detected[indices]), length(indices))
+
+  sequence <- "0321213N230210321N"
+  kmers <- get_all_kmers(sequence)
+  indices <- base4_to_index(kmers)
+
+  detected <- detect_kmers(sequence)
+
+  expect_equal(length(detected[indices]), length(indices))
+  expect_equal(length(detected[-indices]), 4^8 - length(indices))
+  expect_equal(sum(detected[indices]), length(indices))
+
+
+  sequence <- "0321213N230210321N"
+  kmers <- get_all_kmers(sequence, kmer_size = 7)
+  indices <- base4_to_index(kmers)
+
+  detected <- detect_kmers(sequence, kmer_size = 7)
+
+  expect_equal(length(detected[indices]), length(indices))
+  expect_equal(length(detected[-indices]), 4^7 - length(indices))
+  expect_equal(sum(detected[indices]), length(indices))
 
 })
 
 
+
+
+test_that("Accurately detect kmers across multiple sequences", {
+
+  kmer_size <- 3
+  sequences <- c("03212130", "230210321")
+
+  expected <- matrix(0, nrow = 4^kmer_size, ncol = 2)
+  expected[base4_to_index(get_all_kmers(sequences[1], kmer_size)), 1] <-1
+  expected[base4_to_index(get_all_kmers(sequences[2], kmer_size)), 2] <-1
+
+  detect_matrix <- detect_kmers_across_sequences(sequences, kmer_size)
+
+  expect_equal(detect_matrix, expected)
+})
+
+test_that("Calculate word specific priors", {
+
+  kmer_size <- 3
+  sequences <- c("03212130", "03212131", "03212131")
+  detect_matrix <- detect_kmers_across_sequences(sequences, kmer_size)
+
+  #26 - all 3 = (3+0.5) / (1+3) = 0.875
+  #29 - only 1 = 0.375
+  #30 - only 2 and 3 = 0.625
+  #64 - none = 0.125
+
+  expected <- (apply(detect_matrix, 1, sum) + 0.5) / (1 +  length(sequences))
+  priors <- calc_word_specific_priors(detect_matrix)
+
+  expect_equal(priors, expected)
+  expect_equal(priors[26], 0.875)
+  expect_equal(priors[29], 0.375)
+  expect_equal(priors[30], 0.625)
+  expect_equal(priors[64], 0.125)
+
+
+})
+
+test_that("Calculate genus-specific conditional probabilities", {
+
+  kmer_size <- 3
+  sequences <- c("03212130", "03212131", "03212131")
+  genera <- c(1, 2, 2)
+
+  detect_matrix <- detect_kmers_across_sequences(sequences, kmer_size)
+  priors <- calc_word_specific_priors(detect_matrix)
+
+  #(m(wi) + Pi) / (M + 1)
+  #26 - all 3 = (c(1, 2)+0.5) / (c(1, 2) + 1) = 0.75 & 0.833333
+  #29 - only 1 = (c(1, 0)+0.5) / (c(1, 2) + 1) = 0.75 & 0.1666667
+  #30 - only 2 and 3 = (c(0, 2)+0.5) / (c(1, 2) + 1) = 0.25 & 0.833333
+  #64 - none = 0.125 = (c(0, 0)+0.5) / (c(1, 2) + 1) = 0.25 & 0.1666667
+
+  conditional_prob <- calc_genus_conditional_prob(detect_matrix,
+                                                  genera,
+                                                  priors)
+  expect_equal(conditional_prob[26,], (c(1, 2)+0.875) / (c(1, 2) + 1) )
+  expect_equal(conditional_prob[29,], (c(1, 0)+0.375) / (c(1, 2) + 1))
+  expect_equal(conditional_prob[30,], (c(0, 2)+0.625) / (c(1, 2) + 1))
+  expect_equal(conditional_prob[64,], (c(0, 0)+0.125) / (c(1, 2) + 1))
+})
