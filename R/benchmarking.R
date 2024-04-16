@@ -1,6 +1,6 @@
 library(microbenchmark)
 library(tidyverse)
-
+library(Rcpp)
 vector_grow_c <- function(x) {
   output <- numeric()
   for(i in 1:x) {
@@ -42,6 +42,7 @@ vector_lapply <- function(x) {
 }
 
 n <- 1e4
+sourceCpp("R/benchmarking.cpp")
 
 microbenchmark(vector_grow_c(n),times = 10,
                vector_grow_br(n),
@@ -49,8 +50,76 @@ microbenchmark(vector_grow_c(n),times = 10,
                vector_colon(n),
                vector_seq(n),
                vector_sapply(n),
-               vector_lapply(n)) %>%
+               vector_lapply(n),
+               vector_rccp(n),
+               vector_grow_c(n/100),
+               vector_grow_br(n/100),
+               vector_grow_prealloc(n/100),
+               vector_colon(n/100),
+               vector_seq(n/100),
+               vector_sapply(n/100),
+               vector_lapply(n/100),
+               vector_rccp(n/100)) %>%
   group_by(expr) %>%
   summarize(median_time = median(time)) %>%
   arrange(-median_time)
+
+
+
+
+x <- (1:100)^2
+
+x[5]
+x[c(5, 10)]
+
+vector_get_one <- function(x) {
+
+  x[5]
+
+}
+
+vector_get_ten <- function(x) {
+
+  x[5]
+  x[10]
+  x[15]
+  x[20]
+  x[25]
+  x[30]
+  x[35]
+  x[40]
+  x[45]
+  x[50]
+
+}
+
+vector_get_c <- function(x) {
+
+  c(x[5], x[10], x[15], x[20], x[25],
+    x[30], x[35], x[40], x[45], x[50])
+
+}
+
+vector_get_index <- function(x) {
+
+  index <- c(5, 10, 15, 20, 25, 30, 35, 40, 45, 50)
+  x[index]
+
+}
+
+long <- (1:1e4)^2
+short <- (1:1e2)^2
+
+microbenchmark(vector_get_one(long),
+               vector_get_ten(long),
+               vector_get_c(long),
+               vector_get_index(long),
+               vector_get_one(short),
+               vector_get_ten(short),
+               vector_get_c(short),
+               vector_get_index(short)) %>%
+  group_by(expr) %>%
+  summarize(median_time = median(time)) %>%
+  arrange(-median_time)
+
 
