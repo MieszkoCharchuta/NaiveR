@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(phylotyper)
+library(naiver)
 
-test_check("phylotyper")
+test_check("naiver")

@@ -1,21 +1,21 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# phylotyper
+# naiver
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of phylotyper is to …
+The goal of naiver is to …
 
 ## Installation
 
-You can install the development version of phylotyper from
+You can install the development version of naiver from
 [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("MieszkoCharchuta/phylotyper")
+devtools::install_github("MieszkoCharchuta/naiver")
 ```
 
 ## Example
@@ -23,7 +23,7 @@ devtools::install_github("MieszkoCharchuta/phylotyper")
 This is a basic example which shows you how to solve a common problem:
 
 ``` r
-library(phylotyper)
+library(naiver)
 ## basic example code
 ```
 

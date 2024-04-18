@@ -13,20 +13,20 @@ knitr::opts_chunk$set(
 )
 ```
 
-# phylotyper
+# naiver
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of phylotyper is to ...
+The goal of naiver is to ...
 
 ## Installation
 
-You can install the development version of phylotyper from [GitHub](https://github.com/) with:
+You can install the development version of naiver from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("MieszkoCharchuta/phylotyper")
+devtools::install_github("MieszkoCharchuta/naiver")
 ```
 
 ## Example
@@ -34,7 +34,7 @@ devtools::install_github("MieszkoCharchuta/phylotyper")
 This is a basic example which shows you how to solve a common problem:
 
 ```{r example}
-library(phylotyper)
+library(naiver)
 ## basic example code
 ```
 
