@@ -1,6 +1,7 @@
 library(microbenchmark)
 library(tidyverse)
 library(Rcpp)
+
 vector_grow_c <- function(x) {
   output <- numeric()
   for(i in 1:x) {
@@ -41,6 +42,15 @@ vector_lapply <- function(x) {
   lapply(1:x, \(i) i^2)
 }
 
+vector_magrittr <- function(x) {
+  1:5 %>% (\(i) i^2)()
+}
+
+vector_base <- function(x) {
+  1:5 |> (\(i) i^2)()
+}
+
+
 n <- 1e4
 sourceCpp("R/benchmarking.cpp")
 
@@ -52,14 +62,8 @@ microbenchmark(vector_grow_c(n),times = 10,
                vector_sapply(n),
                vector_lapply(n),
                vector_rccp(n),
-               vector_grow_c(n/100),
-               vector_grow_br(n/100),
-               vector_grow_prealloc(n/100),
-               vector_colon(n/100),
-               vector_seq(n/100),
-               vector_sapply(n/100),
-               vector_lapply(n/100),
-               vector_rccp(n/100)) %>%
+               vector_base(n),
+               vector_magrittr(n)) %>%
   group_by(expr) %>%
   summarize(median_time = median(time)) %>%
   arrange(-median_time)

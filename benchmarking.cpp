@@ -10,4 +10,5 @@ NumericVector vector_rccp(int x) {
     output[i-1] = i*i;
   }
   return output;
+
 }
