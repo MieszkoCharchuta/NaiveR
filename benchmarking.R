@@ -18,10 +18,18 @@ vector_grow_br <- function(x) {
   output
 }
 
-vector_grow_prealloc <- function(x) {
+vector_prealloc_sng <- function(x) {
   output <- numeric(x)
   for(i in 1:x) {
     output[i] <- i^2
+  }
+  output
+}
+
+vector_prealloc_dbl <- function(x) {
+  output <- numeric(x)
+  for(i in 1:x) {
+    output[[i]] <- i^2
   }
   output
 }
@@ -42,6 +50,10 @@ vector_lapply <- function(x) {
   lapply(1:x, \(i) i^2)
 }
 
+vector_map <- function(x) {
+  map_dbl(x, \(i) i^2)
+}
+
 vector_magrittr <- function(x) {
   1:5 %>% (\(i) i^2)()
 }
@@ -52,24 +64,42 @@ vector_base <- function(x) {
 
 
 n <- 1e4
-sourceCpp("R/benchmarking.cpp")
+sourceCpp("benchmarking.cpp")
 
-microbenchmark(vector_grow_c(n),times = 10,
-               vector_grow_br(n),
-               vector_grow_prealloc(n),
-               vector_colon(n),
-               vector_seq(n),
-               vector_sapply(n),
-               vector_lapply(n),
-               vector_rccp(n),
-               vector_base(n),
-               vector_magrittr(n)) %>%
-  group_by(expr) %>%
-  summarize(median_time = median(time)) %>%
-  arrange(-median_time)
+mb_by_n <- function(n) {
 
+  microbenchmark(vector_grow_c(n), # times = 10,
+                 vector_grow_br(n),
+                 vector_prealloc_sng(n),
+                 vector_prealloc_dbl(n),
+                 vector_colon(n),
+                 vector_seq(n),
+                 vector_sapply(n),
+                 vector_lapply(n),
+                 vector_rccp(n),
+                 vector_base(n),
+                 vector_magrittr(n),
+                 vector_map(n)) %>%
+    group_by(expr) %>%
+    summarize(median_time = median(time)) %>%
+    arrange(-median_time) %>%
+    mutate(n = n)
 
+}
 
+ns <- c(1, 10, 100, 1000, 2500, 5000, 7500, 10000, 12500, 15000)
+mb_data <- map_dfr(ns, mb_by_n)
+
+mb_data %>%
+  mutate(expr = str_replace(expr, "vector_(.*)\\(n\\)", "\\1")) %>%
+  ggplot(aes(x = n, y = median_time, color = expr, shape = expr)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "size of vector", y = "median time (ns)") +
+  scale_color_manual(values = rep(c("tomato", "dodgerblue", "darkgrey", "orange"), 3)) +
+  scale_shape_manual(values = rep(c(15, 17, 19), each = 4)) +
+  coord_cartesian(ylim = c(0, 5e6)) +
+  theme_classic()
 
 x <- (1:100)^2
 
@@ -78,11 +108,15 @@ x[c(5, 10)]
 
 vector_get_one <- function(x) {
 
+  index <- c(5, 10, 15, 20, 25, 30, 35, 40, 45, 50)
+
   x[5]
 
 }
 
 vector_get_ten <- function(x) {
+
+  index <- c(5, 10, 15, 20, 25, 30, 35, 40, 45, 50)
 
   x[5]
   x[10]
@@ -99,6 +133,8 @@ vector_get_ten <- function(x) {
 
 vector_get_c <- function(x) {
 
+  index <- c(5, 10, 15, 20, 25, 30, 35, 40, 45, 50)
+
   c(x[5], x[10], x[15], x[20], x[25],
     x[30], x[35], x[40], x[45], x[50])
 
@@ -110,6 +146,7 @@ vector_get_index <- function(x) {
   x[index]
 
 }
+
 
 long <- (1:1e4)^2
 short <- (1:1e2)^2
