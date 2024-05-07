@@ -2,6 +2,22 @@ library(microbenchmark)
 library(tidyverse)
 library(Rcpp)
 
+vector_grow_append <- function(x) {
+  output <- numeric()
+  for(i in 1:x) {
+    output <- append(output, i^2)
+  }
+  output
+
+}
+list_grow_append <- function(x) {
+  output <- vector(mode = "list")
+  for(i in 1:x) {
+    output <- append(output, i^2)
+  }
+  output
+
+}
 vector_grow_c <- function(x) {
   output <- numeric()
   for(i in 1:x) {
@@ -10,8 +26,24 @@ vector_grow_c <- function(x) {
   output
 }
 
+list_grow_c <- function(x) {
+  output <- vector(mode = "list")
+  for(i in 1:x) {
+    output <- c(output, i^2)
+  }
+  output
+}
+
 vector_grow_br <- function(x) {
   output <- numeric()
+  for(i in 1:x) {
+    output[i] <- i^2
+  }
+  output
+}
+
+list_grow_br <- function(x) {
+  output <- vector(mode = "list")
   for(i in 1:x) {
     output[i] <- i^2
   }
@@ -34,19 +66,35 @@ vector_prealloc_dbl <- function(x) {
   output
 }
 
+list_prealloc_dbl <- function(x) {
+  output <- vector(mode = "list", x)
+  for(i in 1:x) {
+    output[[i]] <- i^2
+  }
+  output
+}
+
 vector_colon <- function(x) {
   (1:x)^2
+}
+
+list_colon <- function(x) {
+  as.list((1:x)^2)
 }
 
 vector_seq <- function(x) {
   (seq(1,x, by = 1))^2
 }
 
+list_seq <- function(x) {
+  as.list((seq(1,x, by = 1))^2)
+}
+
 vector_sapply <- function(x) {
   sapply(1:x, \(i) i^2)
 }
 
-vector_lapply <- function(x) {
+list_lapply <- function(x) {
   lapply(1:x, \(i) i^2)
 }
 
@@ -54,12 +102,24 @@ vector_map <- function(x) {
   map_dbl(x, \(i) i^2)
 }
 
+list_map <- function(x) {
+  map(x, \(i) i^2)
+}
+
 vector_magrittr <- function(x) {
-  1:5 %>% (\(i) i^2)()
+  1:x %>% (\(i) i^2)()
+}
+
+list_magrittr <- function(x) {
+  1:x %>% (\(i) i^2)() %>% as.list()
 }
 
 vector_base <- function(x) {
-  1:5 |> (\(i) i^2)()
+  1:x |> (\(i) i^2)()
+}
+
+list_base <- function(x) {
+  1:x |> (\(i) i^2)() |> as.list()
 }
 
 
@@ -68,22 +128,37 @@ sourceCpp("benchmarking.cpp")
 
 mb_by_n <- function(n) {
 
-  microbenchmark(vector_grow_c(n), # times = 10,
-                 vector_grow_br(n),
-                 vector_prealloc_sng(n),
-                 vector_prealloc_dbl(n),
-                 vector_colon(n),
-                 vector_seq(n),
-                 vector_sapply(n),
-                 vector_lapply(n),
-                 vector_rccp(n),
-                 vector_base(n),
-                 vector_magrittr(n),
-                 vector_map(n)) %>%
-    group_by(expr) %>%
-    summarize(median_time = median(time)) %>%
-    arrange(-median_time) %>%
-    mutate(n = n)
+  microbenchmark(
+    vector_grow_append(n),
+    vector_grow_c(n),
+    vector_grow_br(n),
+    # vector_prealloc_sng(n),
+    vector_prealloc_dbl(n),
+    vector_colon(n),
+    vector_seq(n),
+    vector_sapply(n),
+    vector_rcpp(n),
+    vector_base(n),
+    vector_magrittr(n),
+    vector_map(n),
+
+    list_grow_append(n),
+    list_grow_c(n),
+    list_grow_br(n),
+    # list_prealloc_sng(n),
+    list_prealloc_dbl(n),
+    list_colon(n),
+    list_seq(n),
+    list_sapply(n),
+    list_rcpp(n),
+    list_base(n),
+    list_magrittr(n),
+    list_map(n),
+    ) %>%
+  group_by(expr) %>%
+  summarize(median_time = median(time)) %>%
+  arrange(-median_time) %>%
+  mutate(n = n)
 
 }
 
